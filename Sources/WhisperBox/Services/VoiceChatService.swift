@@ -33,7 +33,12 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         }
 
         do {
-            let response = try await callClaude(apiKey: apiKey)
+            let response: String
+            if !apiKey.isEmpty {
+                response = try await callClaude(apiKey: apiKey)
+            } else {
+                response = try await callClaudeCLI(transcript: transcript)
+            }
             lastResponse = response
 
             // Add assistant response to history
@@ -66,7 +71,56 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         lastResponse = ""
     }
 
-    // MARK: - Claude API
+    // MARK: - Claude CLI (Max plan, no API key needed)
+
+    private func callClaudeCLI(transcript: String) async throws -> String {
+        // Build context from conversation history
+        var prompt = "You are a voice assistant having a real-time conversation. Keep responses concise and conversational — 1-3 sentences. No markdown or formatting.\n\n"
+
+        for msg in conversationHistory.dropLast() { // dropLast because we already added current
+            if msg["role"] == "user" {
+                prompt += "User: \(msg["content"] ?? "")\n"
+            } else {
+                prompt += "Assistant: \(msg["content"] ?? "")\n"
+            }
+        }
+        prompt += "User: \(transcript)\nAssistant:"
+
+        let process = Process()
+        // Find claude CLI
+        let claudePath = FileManager.default.fileExists(atPath: "/usr/local/bin/claude")
+            ? "/usr/local/bin/claude"
+            : "\(NSHomeDirectory())/.local/bin/claude"
+
+        process.executableURL = URL(fileURLWithPath: claudePath)
+        process.arguments = ["--print", "--permission-mode", "bypassPermissions", prompt]
+
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
+
+        // Inherit PATH so claude can find its deps
+        var env = ProcessInfo.processInfo.environment
+        env["PATH"] = "\(NSHomeDirectory())/.local/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
+        process.environment = env
+
+        try process.run()
+        process.waitUntilExit()
+
+        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        guard !output.isEmpty else {
+            let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errStr = String(data: errData, encoding: .utf8) ?? "Unknown error"
+            throw VoiceChatError.apiError("CLI failed: \(errStr)")
+        }
+
+        return output
+    }
+
+    // MARK: - Claude API (with API key)
 
     private func callClaude(apiKey: String) async throws -> String {
         let url = URL(string: "https://api.anthropic.com/v1/messages")!
