@@ -15,7 +15,7 @@ final class ClaudeAPIService {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
         let body: [String: Any] = [
-            "model": "claude-haiku-4-20250414",
+            "model": "claude-3-5-haiku-20241022",
             "max_tokens": 1024,
             "system": """
                 You are a transcript cleanup assistant. Clean up the following speech-to-text transcript:
