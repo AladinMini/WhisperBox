@@ -16,7 +16,7 @@ final class AppSettings {
     }
 
     var enableClaudeCleanup: Bool {
-        get { defaults.object(forKey: "enableClaudeCleanup") as? Bool ?? true }
+        get { defaults.object(forKey: "enableClaudeCleanup") as? Bool ?? false }
         set { defaults.set(newValue, forKey: "enableClaudeCleanup") }
     }
 
