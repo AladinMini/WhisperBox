@@ -94,7 +94,8 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         let body: [String: Any] = [
             "model": "anthropic/claude-sonnet-4-20250514",
             "messages": messages,
-            "max_tokens": 1024
+            "max_tokens": 1024,
+            "user": "whisperbox-voice-chat"
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
