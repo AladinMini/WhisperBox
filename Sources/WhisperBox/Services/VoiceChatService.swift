@@ -92,7 +92,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         messages.append(contentsOf: conversationHistory)
 
         let body: [String: Any] = [
-            "model": "anthropic/claude-3-5-haiku-20241022",
+            "model": "anthropic/claude-sonnet-4-20250514",
             "messages": messages,
             "max_tokens": 1024
         ]
@@ -128,7 +128,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
         let body: [String: Any] = [
-            "model": "claude-3-5-haiku-20241022",
+            "model": "claude-sonnet-4-20250514",
             "max_tokens": 1024,
             "system": """
                 You are a helpful voice assistant having a real-time conversation. \
