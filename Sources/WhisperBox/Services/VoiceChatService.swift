@@ -67,55 +67,45 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         lastResponse = ""
     }
 
-    // MARK: - OpenClaw Gateway (uses existing Max plan, no API key needed)
+    // MARK: - Claude Code CLI (--continue keeps persistent session, ~3s response)
 
     private func callOpenClaw(transcript: String) async throws -> String {
-        // Read gateway config
-        let configPath = "\(NSHomeDirectory())/.openclaw/openclaw.json"
-        let configData = try Data(contentsOf: URL(fileURLWithPath: configPath))
-        let config = try JSONSerialization.jsonObject(with: configData) as? [String: Any] ?? [:]
-        let gateway = config["gateway"] as? [String: Any] ?? [:]
-        let port = gateway["port"] as? Int ?? 18789
-        let auth = gateway["auth"] as? [String: Any] ?? [:]
-        let token = auth["token"] as? String ?? ""
+        let process = Process()
+        let claudePath = FileManager.default.fileExists(atPath: "\(NSHomeDirectory())/.local/bin/claude")
+            ? "\(NSHomeDirectory())/.local/bin/claude"
+            : "/usr/local/bin/claude"
 
-        let url = URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "content-type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "authorization")
-        request.timeoutInterval = 60
-
-        var messages: [[String: String]] = [
-            ["role": "system", "content": "You are a voice assistant having a real-time conversation. Keep responses concise and conversational — 1-3 sentences. No markdown or formatting — just natural speech."]
+        process.executableURL = URL(fileURLWithPath: claudePath)
+        process.arguments = [
+            "--print",
+            "--continue",
+            "--permission-mode", "bypassPermissions",
+            transcript
         ]
-        messages.append(contentsOf: conversationHistory)
+        process.currentDirectoryURL = URL(fileURLWithPath: NSHomeDirectory())
 
-        let body: [String: Any] = [
-            "model": "anthropic/claude-sonnet-4-20250514",
-            "messages": messages,
-            "max_tokens": 1024,
-            "user": "whisperbox-voice-chat"
-        ]
+        var env = ProcessInfo.processInfo.environment
+        env["PATH"] = "\(NSHomeDirectory())/.local/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
+        process.environment = env
 
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = errorPipe
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        try process.run()
+        process.waitUntilExit()
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown"
-            throw VoiceChatError.apiError("Gateway (\((response as? HTTPURLResponse)?.statusCode ?? 0)): \(errorBody)")
+        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        guard !output.isEmpty else {
+            let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+            let errStr = String(data: errData, encoding: .utf8) ?? "Unknown error"
+            throw VoiceChatError.apiError("CLI: \(errStr)")
         }
 
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let choices = json["choices"] as? [[String: Any]],
-              let first = choices.first,
-              let message = first["message"] as? [String: Any],
-              let text = message["content"] as? String else {
-            throw VoiceChatError.parseError
-        }
-
-        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return output
     }
 
     // MARK: - Claude API (with API key)
