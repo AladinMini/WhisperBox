@@ -10,6 +10,7 @@ final class WhisperBoxController {
     let hotkeyManager = HotkeyManager()
     let claudeService = ClaudeAPIService()
     let deviceManager = AudioDeviceManager()
+    let voiceChatService = VoiceChatService()
 
     var state: RecordingState = .idle
     var recentTranscriptions: [Transcription] = []
@@ -19,7 +20,10 @@ final class WhisperBoxController {
         case .recording: return "waveform.circle.fill"
         case .listening: return "ear.fill"
         case .transcribing, .cleaning: return "ellipsis.circle.fill"
+        case .thinking: return "brain"
+        case .speaking: return "speaker.wave.3.fill"
         default:
+            if settings.recordingMode == .voiceChat { return "bubble.left.and.bubble.right.fill" }
             return settings.recordingMode == .live && audioEngine.isRunning
                 ? "ear.fill" : "waveform.circle"
         }
@@ -30,8 +34,11 @@ final class WhisperBoxController {
         case .recording: return .green
         case .listening: return .yellow
         case .transcribing, .cleaning: return .orange
+        case .thinking: return .purple
+        case .speaking: return .blue
         case .error: return .red
         default:
+            if settings.recordingMode == .voiceChat { return .purple }
             return settings.recordingMode == .live && audioEngine.isRunning
                 ? .yellow : .primary
         }
@@ -63,6 +70,11 @@ final class WhisperBoxController {
     // MARK: - Hotkey Mode
 
     func toggleHotkeyRecording() {
+        if settings.recordingMode == .voiceChat {
+            toggleVoiceChatRecording()
+            return
+        }
+
         guard settings.recordingMode == .hotkey else { return }
 
         switch state {
@@ -125,6 +137,64 @@ final class WhisperBoxController {
             stopLiveMode()
         } else {
             startLiveMode()
+        }
+    }
+
+    // MARK: - Voice Chat Mode
+
+    func toggleVoiceChatRecording() {
+        switch state {
+        case .idle, .done, .error:
+            startRecording()
+        case .recording:
+            stopRecordingAndChat()
+        case .speaking:
+            voiceChatService.stopPlayback()
+            state = .idle
+        default:
+            break
+        }
+    }
+
+    private func stopRecordingAndChat() {
+        let buffer = audioEngine.stopAndReturnBuffer()
+        guard !buffer.isEmpty else {
+            state = .idle
+            return
+        }
+        Task { await processVoiceChat(buffer) }
+    }
+
+    @MainActor
+    private func processVoiceChat(_ buffer: [Float]) async {
+        guard transcriptionService.isLoaded else {
+            state = .error("Model not loaded yet")
+            return
+        }
+
+        state = .transcribing
+
+        do {
+            let rawText = try await transcriptionService.transcribe(audioFrames: buffer)
+            guard !rawText.isEmpty else {
+                state = .idle
+                return
+            }
+
+            state = .thinking
+
+            await voiceChatService.sendToClaudeAndSpeak(
+                transcript: rawText,
+                apiKey: settings.claudeAPIKey,
+                onStartSpeaking: { [weak self] in
+                    self?.state = .speaking
+                },
+                onFinished: { [weak self] in
+                    self?.state = .idle
+                }
+            )
+        } catch {
+            state = .error(error.localizedDescription)
         }
     }
 

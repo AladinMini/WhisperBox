@@ -108,6 +108,61 @@ struct MenuBarView: View {
                         .font(.caption)
                 }
                 .padding(.horizontal, 12)
+            } else if controller.settings.recordingMode == .voiceChat {
+                // Voice Chat controls
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .foregroundStyle(.purple)
+                        Text("⌥ Space: talk → I respond")
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                    }
+
+                    if !controller.voiceChatService.lastResponse.isEmpty {
+                        Text(controller.voiceChatService.lastResponse)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                            .lineLimit(3)
+                            .padding(6)
+                            .background(.quaternary)
+                            .cornerRadius(6)
+                    }
+
+                    HStack(spacing: 8) {
+                        if controller.voiceChatService.isPlaying {
+                            Button(action: {
+                                controller.voiceChatService.stopPlayback()
+                                controller.state = .idle
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "stop.fill")
+                                    Text("Stop")
+                                }
+                                .font(.caption)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Button(action: {
+                            controller.voiceChatService.clearHistory()
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "trash")
+                                Text("Clear Chat")
+                            }
+                            .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+
+                        Spacer()
+
+                        Text("\(controller.voiceChatService.conversationHistory.count) msgs")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .padding(.horizontal, 12)
             } else {
                 // Live mode controls
                 VStack(alignment: .leading, spacing: 6) {
