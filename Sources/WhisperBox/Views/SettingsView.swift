@@ -26,6 +26,25 @@ struct SettingsView: View {
 
     private var generalTab: some View {
         Form {
+            Section("Hotkey") {
+                HotkeyRecorderView(
+                    keyCode: Binding(
+                        get: { controller.settings.hotkeyCode },
+                        set: {
+                            controller.settings.hotkeyCode = $0
+                            controller.updateHotkey()
+                        }
+                    ),
+                    modifiers: Binding(
+                        get: { controller.settings.hotkeyModifiers },
+                        set: {
+                            controller.settings.hotkeyModifiers = $0
+                            controller.updateHotkey()
+                        }
+                    )
+                )
+            }
+
             Section("Recording") {
                 Picker("Default Mode", selection: Binding(
                     get: { controller.settings.recordingMode },

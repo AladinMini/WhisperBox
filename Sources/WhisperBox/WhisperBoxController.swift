@@ -52,9 +52,18 @@ final class WhisperBoxController {
     // MARK: - Setup
 
     private func setupHotkey() {
+        hotkeyManager.configuredKeyCode = settings.hotkeyCode
+        hotkeyManager.configuredModifiers = settings.hotkeyModifiers
         hotkeyManager.onToggle = { [weak self] in
             self?.toggleHotkeyRecording()
         }
+        hotkeyManager.start()
+    }
+
+    func updateHotkey() {
+        hotkeyManager.stop()
+        hotkeyManager.configuredKeyCode = settings.hotkeyCode
+        hotkeyManager.configuredModifiers = settings.hotkeyModifiers
         hotkeyManager.start()
     }
 

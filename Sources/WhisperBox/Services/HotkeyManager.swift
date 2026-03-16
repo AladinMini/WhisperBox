@@ -3,6 +3,8 @@ import Cocoa
 final class HotkeyManager {
     var onToggle: (() -> Void)?
     var rightOptionDown = false
+    var configuredKeyCode: Int = 61  // Right Option
+    var configuredModifiers: Int = 0
 
     fileprivate var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -75,29 +77,33 @@ private func hotkeyCallback(
         return Unmanaged.passRetained(event)
     }
 
-    // Detect Right Option key press via flagsChanged event
-    if type == .flagsChanged {
+    guard let userInfo else { return Unmanaged.passRetained(event) }
+    let manager = Unmanaged<HotkeyManager>.fromOpaque(userInfo).takeUnretainedValue()
+    let targetKeyCode = manager.configuredKeyCode
+    let targetModifiers = manager.configuredModifiers
+
+    // Standalone modifier key (e.g. Right Option, Left Shift)
+    let standaloneModifierCodes = [58, 61, 56, 60, 59, 62, 55, 54]
+    let isStandaloneModifier = targetModifiers == 0 && standaloneModifierCodes.contains(targetKeyCode)
+
+    if isStandaloneModifier && type == .flagsChanged {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-        // keycode 61 = Right Option key
-        if keyCode == 61 {
+        if keyCode == Int64(targetKeyCode) {
             let flags = event.flags
-            let isPressed = flags.contains(.maskAlternate)
-            if let userInfo {
-                let manager = Unmanaged<HotkeyManager>.fromOpaque(userInfo).takeUnretainedValue()
-                if isPressed && !manager.rightOptionDown {
-                    manager.rightOptionDown = true
-                    DispatchQueue.main.async {
-                        manager.onToggle?()
-                    }
-                } else if !isPressed {
-                    manager.rightOptionDown = false
+            let hasModifier = !flags.intersection([.maskAlternate, .maskShift, .maskControl, .maskCommand]).isEmpty
+            if hasModifier && !manager.rightOptionDown {
+                manager.rightOptionDown = true
+                DispatchQueue.main.async {
+                    manager.onToggle?()
                 }
+            } else if !hasModifier {
+                manager.rightOptionDown = false
             }
         }
         return Unmanaged.passRetained(event)
     }
 
-    // Also keep Option+Space as fallback
+    // Regular key + modifier combo (e.g. ⌥Space, ⌘⇧R)
     guard type == .keyDown else {
         return Unmanaged.passRetained(event)
     }
@@ -105,18 +111,16 @@ private func hotkeyCallback(
     let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
     let flags = event.flags
 
-    let isOptionPressed = flags.contains(.maskAlternate)
-    let isSpace = keyCode == 49
-    let noOtherModifiers = !flags.contains(.maskCommand) && !flags.contains(.maskControl) && !flags.contains(.maskShift)
+    if Int(keyCode) == targetKeyCode {
+        let requiredMods = NSEvent.ModifierFlags(rawValue: UInt(targetModifiers))
+        let currentMods = NSEvent.ModifierFlags(rawValue: UInt(flags.rawValue)).intersection([.control, .option, .shift, .command])
 
-    if isSpace && isOptionPressed && noOtherModifiers {
-        if let userInfo {
-            let manager = Unmanaged<HotkeyManager>.fromOpaque(userInfo).takeUnretainedValue()
+        if currentMods == requiredMods {
             DispatchQueue.main.async {
                 manager.onToggle?()
             }
+            return nil
         }
-        return nil
     }
 
     return Unmanaged.passRetained(event)

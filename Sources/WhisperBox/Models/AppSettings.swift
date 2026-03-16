@@ -43,6 +43,18 @@ final class AppSettings {
         set { defaults.set(newValue, forKey: "silenceTimeout") }
     }
 
+    /// Hotkey keycode (default 61 = Right Option)
+    var hotkeyCode: Int {
+        get { defaults.object(forKey: "hotkeyCode") as? Int ?? 61 }
+        set { defaults.set(newValue, forKey: "hotkeyCode") }
+    }
+
+    /// Hotkey modifier flags (default 0 = no modifiers, standalone key)
+    var hotkeyModifiers: Int {
+        get { defaults.object(forKey: "hotkeyModifiers") as? Int ?? 0 }
+        set { defaults.set(newValue, forKey: "hotkeyModifiers") }
+    }
+
     var hasCompletedOnboarding: Bool {
         get { defaults.bool(forKey: "hasCompletedOnboarding") }
         set { defaults.set(newValue, forKey: "hasCompletedOnboarding") }
