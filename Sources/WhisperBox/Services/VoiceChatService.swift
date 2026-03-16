@@ -46,12 +46,8 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
 
             await MainActor.run { onStartSpeaking?() }
 
-            // Generate and play TTS
-            if hasTTS {
-                try await speakWithQwen(text: response)
-            } else {
-                await speakWithSystem(text: response)
-            }
+            // Generate and play TTS (using macOS say for now)
+            await speakWithSystem(text: response)
 
             await MainActor.run { onFinished?() }
         } catch {
