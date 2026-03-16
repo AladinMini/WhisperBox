@@ -1,4 +1,0 @@
-module SwiftWhisper {
-    header "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/SwiftWhisper-Swift.h"
-    requires objc
-}
