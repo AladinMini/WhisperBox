@@ -78,11 +78,14 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         process.executableURL = URL(fileURLWithPath: claudePath)
         process.arguments = [
             "--print",
-            "--continue",
             "--permission-mode", "bypassPermissions",
+            "--model", "sonnet",
             transcript
         ]
-        process.currentDirectoryURL = URL(fileURLWithPath: NSHomeDirectory())
+        // Use a clean directory to avoid loading huge sessions
+        let voiceDir = NSHomeDirectory() + "/.whisperbox-voice"
+        try? FileManager.default.createDirectory(atPath: voiceDir, withIntermediateDirectories: true)
+        process.currentDirectoryURL = URL(fileURLWithPath: voiceDir)
 
         var env = ProcessInfo.processInfo.environment
         env["PATH"] = "\(NSHomeDirectory())/.local/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
