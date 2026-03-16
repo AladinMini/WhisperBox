@@ -2,6 +2,7 @@ import Cocoa
 
 final class HotkeyManager {
     var onToggle: (() -> Void)?
+    var rightOptionDown = false
 
     fileprivate var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -9,7 +10,7 @@ final class HotkeyManager {
     func start() {
         guard eventTap == nil else { return }
 
-        let eventMask = (1 << CGEventType.keyDown.rawValue)
+        let eventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
 
         let userInfo = Unmanaged.passUnretained(self).toOpaque()
 
@@ -74,6 +75,29 @@ private func hotkeyCallback(
         return Unmanaged.passRetained(event)
     }
 
+    // Detect Right Option key press via flagsChanged event
+    if type == .flagsChanged {
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        // keycode 61 = Right Option key
+        if keyCode == 61 {
+            let flags = event.flags
+            let isPressed = flags.contains(.maskAlternate)
+            if let userInfo {
+                let manager = Unmanaged<HotkeyManager>.fromOpaque(userInfo).takeUnretainedValue()
+                if isPressed && !manager.rightOptionDown {
+                    manager.rightOptionDown = true
+                    DispatchQueue.main.async {
+                        manager.onToggle?()
+                    }
+                } else if !isPressed {
+                    manager.rightOptionDown = false
+                }
+            }
+        }
+        return Unmanaged.passRetained(event)
+    }
+
+    // Also keep Option+Space as fallback
     guard type == .keyDown else {
         return Unmanaged.passRetained(event)
     }
@@ -81,10 +105,8 @@ private func hotkeyCallback(
     let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
     let flags = event.flags
 
-    // Option+Space: keycode 49 = Space, check for Option flag
     let isOptionPressed = flags.contains(.maskAlternate)
     let isSpace = keyCode == 49
-    // Make sure no other modifiers (Cmd, Ctrl, Shift) are pressed
     let noOtherModifiers = !flags.contains(.maskCommand) && !flags.contains(.maskControl) && !flags.contains(.maskShift)
 
     if isSpace && isOptionPressed && noOtherModifiers {
@@ -94,7 +116,6 @@ private func hotkeyCallback(
                 manager.onToggle?()
             }
         }
-        // Consume the event so it doesn't propagate
         return nil
     }
 
