@@ -37,7 +37,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
             if !apiKey.isEmpty {
                 response = try await callClaude(apiKey: apiKey)
             } else {
-                response = try await callClaudeCLI(transcript: transcript)
+                response = try await callOpenClaw(transcript: transcript)
             }
             lastResponse = response
 
@@ -71,53 +71,54 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         lastResponse = ""
     }
 
-    // MARK: - Claude CLI (Max plan, no API key needed)
+    // MARK: - OpenClaw Gateway (uses existing Max plan, no API key needed)
 
-    private func callClaudeCLI(transcript: String) async throws -> String {
-        // Build context from conversation history
-        var prompt = "You are a voice assistant having a real-time conversation. Keep responses concise and conversational — 1-3 sentences. No markdown or formatting.\n\n"
+    private func callOpenClaw(transcript: String) async throws -> String {
+        // Read gateway config
+        let configPath = "\(NSHomeDirectory())/.openclaw/openclaw.json"
+        let configData = try Data(contentsOf: URL(fileURLWithPath: configPath))
+        let config = try JSONSerialization.jsonObject(with: configData) as? [String: Any] ?? [:]
+        let gateway = config["gateway"] as? [String: Any] ?? [:]
+        let port = gateway["port"] as? Int ?? 18789
+        let auth = gateway["auth"] as? [String: Any] ?? [:]
+        let token = auth["token"] as? String ?? ""
 
-        for msg in conversationHistory.dropLast() { // dropLast because we already added current
-            if msg["role"] == "user" {
-                prompt += "User: \(msg["content"] ?? "")\n"
-            } else {
-                prompt += "Assistant: \(msg["content"] ?? "")\n"
-            }
-        }
-        prompt += "User: \(transcript)\nAssistant:"
+        let url = URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "authorization")
+        request.timeoutInterval = 30
 
-        let process = Process()
-        // Find claude CLI
-        let claudePath = FileManager.default.fileExists(atPath: "/usr/local/bin/claude")
-            ? "/usr/local/bin/claude"
-            : "\(NSHomeDirectory())/.local/bin/claude"
+        var messages: [[String: String]] = [
+            ["role": "system", "content": "You are a voice assistant having a real-time conversation. Keep responses concise and conversational — 1-3 sentences. No markdown or formatting — just natural speech."]
+        ]
+        messages.append(contentsOf: conversationHistory)
 
-        process.executableURL = URL(fileURLWithPath: claudePath)
-        process.arguments = ["--print", "--permission-mode", "bypassPermissions", prompt]
+        let body: [String: Any] = [
+            "model": "anthropic/claude-sonnet-4-20250514",
+            "messages": messages,
+            "max_tokens": 1024
+        ]
 
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        // Inherit PATH so claude can find its deps
-        var env = ProcessInfo.processInfo.environment
-        env["PATH"] = "\(NSHomeDirectory())/.local/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
-        process.environment = env
+        let (data, response) = try await URLSession.shared.data(for: request)
 
-        try process.run()
-        process.waitUntilExit()
-
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        guard !output.isEmpty else {
-            let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errStr = String(data: errData, encoding: .utf8) ?? "Unknown error"
-            throw VoiceChatError.apiError("CLI failed: \(errStr)")
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw VoiceChatError.apiError("Gateway (\((response as? HTTPURLResponse)?.statusCode ?? 0)): \(errorBody)")
         }
 
-        return output
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let first = choices.first,
+              let message = first["message"] as? [String: Any],
+              let text = message["content"] as? String else {
+            throw VoiceChatError.parseError
+        }
+
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Claude API (with API key)
