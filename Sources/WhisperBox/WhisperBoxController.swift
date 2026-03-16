@@ -228,7 +228,7 @@ final class WhisperBoxController {
 
             var cleanedText: String? = nil
 
-            if settings.enableClaudeCleanup && !settings.claudeAPIKey.isEmpty {
+            if settings.enableClaudeCleanup {
                 state = .cleaning
                 cleanedText = try? await claudeService.cleanup(
                     rawTranscript: rawText,
