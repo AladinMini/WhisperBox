@@ -1,31 +1,29 @@
 import Foundation
 
 final class ClaudeAPIService {
-    private static let apiURL = URL(string: "https://api.anthropic.com/v1/messages")!
 
     func cleanup(rawTranscript: String, apiKey: String) async throws -> String {
-        guard !apiKey.isEmpty else {
-            throw ClaudeError.noAPIKey
-        }
+        // Route through OpenClaw gateway — no API key needed
+        let configPath = "\(NSHomeDirectory())/.openclaw/openclaw.json"
+        let configData = try Data(contentsOf: URL(fileURLWithPath: configPath))
+        let config = try JSONSerialization.jsonObject(with: configData) as? [String: Any] ?? [:]
+        let gateway = config["gateway"] as? [String: Any] ?? [:]
+        let port = gateway["port"] as? Int ?? 18789
+        let auth = gateway["auth"] as? [String: Any] ?? [:]
+        let token = auth["token"] as? String ?? ""
 
-        var request = URLRequest(url: Self.apiURL)
+        let url = URL(string: "http://127.0.0.1:\(port)/v1/chat/completions")!
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "authorization")
+        request.timeoutInterval = 15
 
         let body: [String: Any] = [
-            "model": "claude-3-5-haiku-20241022",
+            "model": "anthropic/claude-3-5-haiku-20241022",
             "max_tokens": 1024,
-            "system": """
-                You are a transcript cleanup assistant. Clean up the following speech-to-text transcript:
-                - Fix grammar and punctuation
-                - Remove filler words (um, uh, like, you know)
-                - Fix obvious speech recognition errors
-                - Preserve the original meaning and tone
-                - Return ONLY the cleaned text, nothing else
-                """,
             "messages": [
+                ["role": "system", "content": "You are a transcript cleanup assistant. Clean up the following speech-to-text transcript: Fix grammar and punctuation. Remove filler words (um, uh, like, you know). Fix obvious speech recognition errors. Preserve the original meaning and tone. Return ONLY the cleaned text, nothing else."],
                 ["role": "user", "content": rawTranscript]
             ]
         ]
@@ -34,19 +32,16 @@ final class ClaudeAPIService {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw ClaudeError.invalidResponse
-        }
-
-        guard httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw ClaudeError.apiError(statusCode: httpResponse.statusCode, message: errorBody)
+            throw ClaudeError.apiError(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0, message: errorBody)
         }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let content = json["content"] as? [[String: Any]],
-              let firstBlock = content.first,
-              let text = firstBlock["text"] as? String else {
+              let choices = json["choices"] as? [[String: Any]],
+              let first = choices.first,
+              let message = first["message"] as? [String: Any],
+              let text = message["content"] as? String else {
             throw ClaudeError.parseError
         }
 
