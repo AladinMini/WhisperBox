@@ -12,7 +12,7 @@ final class AudioEngine {
 
     // MARK: - Hotkey Mode (buffered capture)
 
-    func startBufferedCapture() throws {
+    func startBufferedCapture(deviceManager: AudioDeviceManager? = nil) throws {
         guard !isRunning else { return }
 
         bufferLock.lock()
@@ -21,6 +21,9 @@ final class AudioEngine {
 
         let engine = AVAudioEngine()
         self.engine = engine
+
+        // Apply selected input device
+        deviceManager?.applySelectedDevice(to: engine)
 
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)
@@ -86,6 +89,7 @@ final class AudioEngine {
         threshold: Float,
         silenceTimeout: TimeInterval,
         minimumDuration: TimeInterval,
+        deviceManager: AudioDeviceManager? = nil,
         onSpeechCaptured: @escaping ([Float]) -> Void
     ) throws {
         guard !isRunning else { return }
@@ -96,6 +100,9 @@ final class AudioEngine {
 
         let engine = AVAudioEngine()
         self.engine = engine
+
+        // Apply selected input device
+        deviceManager?.applySelectedDevice(to: engine)
 
         let inputNode = engine.inputNode
         let inputFormat = inputNode.outputFormat(forBus: 0)

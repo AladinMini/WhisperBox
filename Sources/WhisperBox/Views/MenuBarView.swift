@@ -18,11 +18,61 @@ struct MenuBarView: View {
             .padding(.horizontal, 12)
             .padding(.top, 8)
 
-            // Audio Level Meter
-            if controller.state.isActive || controller.audioEngine.isRunning {
-                AudioLevelView(level: controller.audioEngine.audioLevel)
+            // Audio Level Meter (always show when testing or active)
+            if controller.state.isActive || controller.audioEngine.isRunning || controller.deviceManager.isTesting {
+                AudioLevelView(level: controller.deviceManager.isTesting ? controller.deviceManager.testLevel : controller.audioEngine.audioLevel)
                     .padding(.horizontal, 12)
             }
+
+            Divider()
+
+            // Input Device Selector
+            HStack {
+                Image(systemName: "mic")
+                    .foregroundStyle(.secondary)
+                Picker("", selection: Binding(
+                    get: { controller.deviceManager.selectedDeviceID ?? 0 },
+                    set: { newID in
+                        controller.deviceManager.selectedDeviceID = newID
+                    }
+                )) {
+                    ForEach(controller.deviceManager.availableDevices) { device in
+                        Text(device.name).tag(device.id)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .padding(.horizontal, 12)
+
+            // Test / Refresh buttons
+            HStack(spacing: 8) {
+                Button(action: {
+                    if controller.deviceManager.isTesting {
+                        controller.deviceManager.stopTest()
+                    } else {
+                        controller.deviceManager.startTest()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: controller.deviceManager.isTesting ? "stop.fill" : "waveform")
+                        Text(controller.deviceManager.isTesting ? "Stop Test" : "Test Mic")
+                    }
+                    .font(.caption)
+                }
+                .buttonStyle(.bordered)
+
+                Button(action: {
+                    controller.deviceManager.refreshDevices()
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .help("Refresh device list")
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
 
             Divider()
 

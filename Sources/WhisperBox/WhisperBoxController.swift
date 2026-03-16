@@ -9,6 +9,7 @@ final class WhisperBoxController {
     let modelManager = ModelManager()
     let hotkeyManager = HotkeyManager()
     let claudeService = ClaudeAPIService()
+    let deviceManager = AudioDeviceManager()
 
     var state: RecordingState = .idle
     var recentTranscriptions: [Transcription] = []
@@ -76,7 +77,7 @@ final class WhisperBoxController {
 
     private func startRecording() {
         do {
-            try audioEngine.startBufferedCapture()
+            try audioEngine.startBufferedCapture(deviceManager: deviceManager)
             state = .recording
         } catch {
             state = .error(error.localizedDescription)
@@ -100,7 +101,8 @@ final class WhisperBoxController {
             try audioEngine.startLiveCapture(
                 threshold: settings.liveThreshold,
                 silenceTimeout: settings.silenceTimeout,
-                minimumDuration: settings.minimumSpeechDuration
+                minimumDuration: settings.minimumSpeechDuration,
+                deviceManager: deviceManager
             ) { [weak self] buffer in
                 guard let self else { return }
                 Task { @MainActor in
