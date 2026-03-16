@@ -1,0 +1,83 @@
+{
+  "": {
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/master.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Models/AppSettings.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AppSettings.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AppSettings.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AppSettings~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AppSettings.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Models/RecordingState.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/RecordingState.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/RecordingState.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/RecordingState~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/RecordingState.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Models/Transcription.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/Transcription.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/Transcription.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/Transcription~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/Transcription.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/AudioEngine.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AudioEngine.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AudioEngine.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AudioEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/AudioEngine.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/ClaudeAPIService.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClaudeAPIService.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClaudeAPIService.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClaudeAPIService~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClaudeAPIService.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/ClipboardManager.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClipboardManager.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClipboardManager.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClipboardManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ClipboardManager.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/HotkeyManager.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/HotkeyManager.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/HotkeyManager.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/HotkeyManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/HotkeyManager.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/ModelManager.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ModelManager.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ModelManager.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ModelManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/ModelManager.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Services/TranscriptionService.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/TranscriptionService.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/TranscriptionService.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/TranscriptionService~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/TranscriptionService.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Views/MenuBarView.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/MenuBarView.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/MenuBarView.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/MenuBarView~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/MenuBarView.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/Views/SettingsView.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/SettingsView.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/SettingsView.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/SettingsView~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/SettingsView.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/WhisperBoxApp.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxApp.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxApp.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxApp.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/Sources/WhisperBox/WhisperBoxController.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxController.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxController.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxController~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/WhisperBox.build/WhisperBoxController.swiftdeps"
+  }
+}

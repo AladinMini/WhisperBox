@@ -1,0 +1,59 @@
+import Foundation
+import SwiftUI
+
+@Observable
+final class AppSettings {
+    private let defaults = UserDefaults.standard
+
+    var recordingMode: RecordingMode {
+        get { RecordingMode(rawValue: defaults.string(forKey: "recordingMode") ?? "Hotkey") ?? .hotkey }
+        set { defaults.set(newValue.rawValue, forKey: "recordingMode") }
+    }
+
+    var claudeAPIKey: String {
+        get { defaults.string(forKey: "claudeAPIKey") ?? "" }
+        set { defaults.set(newValue, forKey: "claudeAPIKey") }
+    }
+
+    var enableClaudeCleanup: Bool {
+        get { defaults.object(forKey: "enableClaudeCleanup") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "enableClaudeCleanup") }
+    }
+
+    var autoPasteEnabled: Bool {
+        get { defaults.object(forKey: "autoPasteEnabled") as? Bool ?? false }
+        set { defaults.set(newValue, forKey: "autoPasteEnabled") }
+    }
+
+    /// RMS threshold for live mode voice detection (0.0 - 1.0 range, maps to dB in UI)
+    var liveThreshold: Float {
+        get { defaults.object(forKey: "liveThreshold") as? Float ?? 0.03 }
+        set { defaults.set(newValue, forKey: "liveThreshold") }
+    }
+
+    /// Minimum speech duration in seconds before processing
+    var minimumSpeechDuration: Double {
+        get { defaults.object(forKey: "minimumSpeechDuration") as? Double ?? 0.5 }
+        set { defaults.set(newValue, forKey: "minimumSpeechDuration") }
+    }
+
+    /// Silence timeout in seconds before auto-stopping in live mode
+    var silenceTimeout: Double {
+        get { defaults.object(forKey: "silenceTimeout") as? Double ?? 1.5 }
+        set { defaults.set(newValue, forKey: "silenceTimeout") }
+    }
+
+    var hasCompletedOnboarding: Bool {
+        get { defaults.bool(forKey: "hasCompletedOnboarding") }
+        set { defaults.set(newValue, forKey: "hasCompletedOnboarding") }
+    }
+
+    static var modelDirectoryURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return appSupport.appendingPathComponent("WhisperBox", isDirectory: true)
+    }
+
+    static var modelFileURL: URL {
+        modelDirectoryURL.appendingPathComponent("ggml-base.en.bin")
+    }
+}

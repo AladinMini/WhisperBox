@@ -1,0 +1,4 @@
+module whisper_cpp {
+    umbrella "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/whisper_cpp/include"
+    export *
+}

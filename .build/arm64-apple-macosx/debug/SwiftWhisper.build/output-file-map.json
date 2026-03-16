@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/master.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/Segment.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Segment.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Segment.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Segment~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Segment.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/Whisper.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Whisper.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Whisper.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Whisper~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/Whisper.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/WhisperDelegate.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperDelegate.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperDelegate.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperDelegate.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/WhisperError.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperError.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperError.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperError~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperError.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/WhisperLanguage.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperLanguage.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperLanguage.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperLanguage~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperLanguage.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/WhisperParams.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperParams.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperParams.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperParams~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperParams.swiftdeps"
+  },
+  "/Users/agent/code/WhisperBox/.build/checkouts/SwiftWhisper/Sources/SwiftWhisper/WhisperSamplingStrategy.swift": {
+    "dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperSamplingStrategy.d",
+    "object": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperSamplingStrategy.swift.o",
+    "swiftmodule": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperSamplingStrategy~partial.swiftmodule",
+    "swift-dependencies": "/Users/agent/code/WhisperBox/.build/arm64-apple-macosx/debug/SwiftWhisper.build/WhisperSamplingStrategy.swiftdeps"
+  }
+}
