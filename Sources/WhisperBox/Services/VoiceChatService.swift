@@ -84,7 +84,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "authorization")
-        request.timeoutInterval = 30
+        request.timeoutInterval = 60
 
         var messages: [[String: String]] = [
             ["role": "system", "content": "You are a voice assistant having a real-time conversation. Keep responses concise and conversational — 1-3 sentences. No markdown or formatting — just natural speech."]
@@ -92,7 +92,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         messages.append(contentsOf: conversationHistory)
 
         let body: [String: Any] = [
-            "model": "anthropic/claude-sonnet-4-20250514",
+            "model": "anthropic/claude-3-5-haiku-20241022",
             "messages": messages,
             "max_tokens": 1024
         ]
@@ -128,7 +128,7 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         request.setValue("application/json", forHTTPHeaderField: "content-type")
 
         let body: [String: Any] = [
-            "model": "claude-sonnet-4-20250514",
+            "model": "claude-3-5-haiku-20241022",
             "max_tokens": 1024,
             "system": """
                 You are a helpful voice assistant having a real-time conversation. \
