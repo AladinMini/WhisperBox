@@ -219,7 +219,14 @@ final class WhisperBoxController {
         state = .transcribing
 
         do {
-            let rawText = try await transcriptionService.transcribe(audioFrames: buffer)
+            var rawText = try await transcriptionService.transcribe(audioFrames: buffer)
+
+            // Filter out Whisper artifacts
+            let artifacts = ["[BLANK_AUDIO]", "[silence]", "[music]", "[applause]", "[laughter]", "(silence)", "(music)"]
+            for artifact in artifacts {
+                rawText = rawText.replacingOccurrences(of: artifact, with: "")
+            }
+            rawText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
 
             guard !rawText.isEmpty else {
                 state = settings.recordingMode == .live ? .listening : .idle
