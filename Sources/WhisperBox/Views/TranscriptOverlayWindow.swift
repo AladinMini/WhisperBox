@@ -134,6 +134,17 @@ struct TranscriptOverlayView: View {
         }
     }
 
+    /// Show only the last few lines of text to keep it in view
+    private func lastLines(_ text: String, count: Int) -> String {
+        let lines = text.split(omittingEmptySubsequences: false, whereSeparator: { $0 == "\n" || $0 == "." })
+        // For continuous text without newlines, do word-based truncation
+        let words = text.split(separator: " ")
+        if words.count > count * 12 {
+            return words.suffix(count * 12).joined(separator: " ")
+        }
+        return text
+    }
+
     private var bubbleView: some View {
         VStack(alignment: .leading, spacing: 6) {
             if !viewModel.userText.isEmpty {
@@ -144,20 +155,29 @@ struct TranscriptOverlayView: View {
                     Text(viewModel.userText)
                         .font(.system(size: 13))
                         .foregroundStyle(.white.opacity(0.8))
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(3)
                 }
             }
 
             if !viewModel.responseText.isEmpty {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: "speaker.wave.2.fill")
-                        .font(.caption)
-                        .foregroundStyle(.green)
-                    Text(viewModel.responseText)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.white)
-                        .fixedSize(horizontal: false, vertical: true)
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "speaker.wave.2.fill")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                            Text(viewModel.responseText)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.white)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .id("bottom")
+                    }
+                    .onChange(of: viewModel.responseText) { _, _ in
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
                 }
+                .frame(maxHeight: 200)
             }
         }
         .padding(12)
@@ -176,15 +196,16 @@ struct TranscriptOverlayView: View {
                 Text(viewModel.userText)
                     .font(.system(size: 14))
                     .foregroundStyle(.white.opacity(0.7))
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
                     .multilineTextAlignment(.center)
             }
 
             if !viewModel.responseText.isEmpty {
-                Text(viewModel.responseText)
+                // Show only last ~3 lines worth of words for subtitle style
+                Text(lastLines(viewModel.responseText, count: 2))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(3)
                     .multilineTextAlignment(.center)
             }
         }
