@@ -192,7 +192,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         let body: [String: Any] = [
             "model": "kokoro",
             "input": text,
-            "voice": "am_puck",
+            "voice": "am_fenrir",
             "response_format": "mp3",
             "speed": 1.0
         ]
