@@ -12,6 +12,11 @@ final class WhisperBoxController {
     let deviceManager = AudioDeviceManager()
     let voiceChatService = VoiceChatService()
     let streamingVoiceChat = StreamingVoiceChatService()
+    private var _transcriptOverlay: TranscriptOverlayWindow?
+    @MainActor var transcriptOverlay: TranscriptOverlayWindow {
+        if _transcriptOverlay == nil { _transcriptOverlay = TranscriptOverlayWindow() }
+        return _transcriptOverlay!
+    }
 
     var state: RecordingState = .idle
     var recentTranscriptions: [Transcription] = []
@@ -193,14 +198,24 @@ final class WhisperBoxController {
 
             state = .thinking
 
+            transcriptOverlay.style = settings.overlayStyle
+            transcriptOverlay.show(userText: rawText)
+
             streamingVoiceChat.voiceName = settings.kokoroVoice
             await streamingVoiceChat.sendAndSpeak(
                 transcript: rawText,
+                onPartialResponse: { [weak self] partial in
+                    self?.transcriptOverlay.updateResponse(partial)
+                },
                 onStartSpeaking: { [weak self] in
                     self?.state = .speaking
                 },
                 onFinished: { [weak self] in
                     self?.state = .idle
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(3))
+                        self?.transcriptOverlay.hide()
+                    }
                 }
             )
         } catch {

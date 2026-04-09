@@ -105,6 +105,11 @@ final class AppSettings {
         set { defaults.set(newValue, forKey: "kokoroVoice") }
     }
 
+    var overlayStyle: OverlayStyle {
+        get { OverlayStyle(rawValue: defaults.string(forKey: "overlayStyle") ?? "bubble") ?? .bubble }
+        set { defaults.set(newValue.rawValue, forKey: "overlayStyle") }
+    }
+
     static var modelDirectoryURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return appSupport.appendingPathComponent("WhisperBox", isDirectory: true)

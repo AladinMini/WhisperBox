@@ -17,6 +17,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
 
     func sendAndSpeak(
         transcript: String,
+        onPartialResponse: ((String) -> Void)? = nil,
         onStartSpeaking: (() -> Void)? = nil,
         onFinished: (() -> Void)? = nil
     ) async {
@@ -31,6 +32,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
 
         do {
             try await streamFromGateway(
+                onPartialResponse: onPartialResponse,
                 onSentence: { [weak self] sentence in
                     guard let self else { return }
                     self.speechQueue.append(sentence)
@@ -80,6 +82,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
     // MARK: - Streaming Gateway
 
     private func streamFromGateway(
+        onPartialResponse: ((String) -> Void)? = nil,
         onSentence: @escaping (String) -> Void,
         onComplete: @escaping (String) -> Void
     ) async throws {
@@ -140,6 +143,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
 
             await MainActor.run {
                 self.currentPartial = fullText
+                onPartialResponse?(fullText)
             }
 
             // Check for sentence boundaries

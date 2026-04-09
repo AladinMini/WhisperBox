@@ -216,6 +216,22 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Visual Feedback") {
+                Picker("Transcript Display", selection: Binding(
+                    get: { controller.settings.overlayStyle },
+                    set: { controller.settings.overlayStyle = $0 }
+                )) {
+                    ForEach(OverlayStyle.allCases, id: \.self) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text("Shows what you said and the response as it streams")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Text-to-Speech") {
                 Picker("TTS Engine", selection: Binding(
                     get: { controller.settings.ttsEngine },
