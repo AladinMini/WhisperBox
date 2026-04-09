@@ -175,6 +175,45 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
 
     @MainActor
     private func speakSentence(_ text: String) async {
+        // Try Kokoro first, fall back to macOS say
+        if await speakWithKokoro(text) { return }
+        await speakWithSay(text)
+    }
+
+    @MainActor
+    private func speakWithKokoro(_ text: String) async -> Bool {
+        let outputPath = NSTemporaryDirectory() + "wb_tts_\(UUID().uuidString).mp3"
+        let url = URL(string: "http://127.0.0.1:8880/v1/audio/speech")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "content-type")
+        request.timeoutInterval = 10
+
+        let body: [String: Any] = [
+            "model": "kokoro",
+            "input": text,
+            "voice": "am_adam",
+            "response_format": "mp3",
+            "speed": 1.0
+        ]
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                return false
+            }
+            try data.write(to: URL(fileURLWithPath: outputPath))
+        } catch {
+            return false
+        }
+
+        await playAudioFile(outputPath)
+        return true
+    }
+
+    @MainActor
+    private func speakWithSay(_ text: String) async {
         let outputPath = NSTemporaryDirectory() + "wb_tts_\(UUID().uuidString).aiff"
 
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
@@ -186,10 +225,14 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         }
 
         guard FileManager.default.fileExists(atPath: outputPath) else { return }
+        await playAudioFile(outputPath)
+    }
 
+    @MainActor
+    private func playAudioFile(_ path: String) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             do {
-                let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: outputPath))
+                let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
                 self.audioPlayer = player
                 self.isPlaying = true
                 self.playbackContinuation = continuation
@@ -202,7 +245,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         }
 
         isPlaying = false
-        try? FileManager.default.removeItem(atPath: outputPath)
+        try? FileManager.default.removeItem(atPath: path)
     }
 
     // MARK: - AVAudioPlayerDelegate
