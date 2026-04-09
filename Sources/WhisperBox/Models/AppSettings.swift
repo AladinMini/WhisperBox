@@ -1,6 +1,20 @@
 import Foundation
 import SwiftUI
 
+enum TTSEngine: String, CaseIterable {
+    case auto = "auto"
+    case qwen3 = "qwen3"
+    case system = "system"
+
+    var displayName: String {
+        switch self {
+        case .auto: return "Auto (Qwen3 → System)"
+        case .qwen3: return "Qwen3-TTS"
+        case .system: return "macOS Say"
+        }
+    }
+}
+
 @Observable
 final class AppSettings {
     private let defaults = UserDefaults.standard
@@ -58,6 +72,30 @@ final class AppSettings {
     var hasCompletedOnboarding: Bool {
         get { defaults.bool(forKey: "hasCompletedOnboarding") }
         set { defaults.set(newValue, forKey: "hasCompletedOnboarding") }
+    }
+
+    // MARK: - OpenClaw Gateway (Voice Chat)
+
+    var gatewayURL: String {
+        get { defaults.string(forKey: "gatewayURL") ?? "http://127.0.0.1:18789" }
+        set { defaults.set(newValue, forKey: "gatewayURL") }
+    }
+
+    var gatewayToken: String {
+        get { defaults.string(forKey: "gatewayToken") ?? "" }
+        set { defaults.set(newValue, forKey: "gatewayToken") }
+    }
+
+    // MARK: - TTS
+
+    var ttsEngine: TTSEngine {
+        get { TTSEngine(rawValue: defaults.string(forKey: "ttsEngine") ?? "auto") ?? .auto }
+        set { defaults.set(newValue.rawValue, forKey: "ttsEngine") }
+    }
+
+    var customTTSPath: String {
+        get { defaults.string(forKey: "customTTSPath") ?? "" }
+        set { defaults.set(newValue, forKey: "customTTSPath") }
     }
 
     static var modelDirectoryURL: URL {

@@ -11,6 +11,7 @@ final class WhisperBoxController {
     let claudeService = ClaudeAPIService()
     let deviceManager = AudioDeviceManager()
     let voiceChatService = VoiceChatService()
+    let streamingVoiceChat = StreamingVoiceChatService()
 
     var state: RecordingState = .idle
     var recentTranscriptions: [Transcription] = []
@@ -158,7 +159,7 @@ final class WhisperBoxController {
         case .recording:
             stopRecordingAndChat()
         case .speaking:
-            voiceChatService.stopPlayback()
+            streamingVoiceChat.stopPlayback()
             state = .idle
         default:
             break
@@ -192,9 +193,8 @@ final class WhisperBoxController {
 
             state = .thinking
 
-            await voiceChatService.sendToClaudeAndSpeak(
+            await streamingVoiceChat.sendAndSpeak(
                 transcript: rawText,
-                apiKey: settings.claudeAPIKey,
                 onStartSpeaking: { [weak self] in
                     self?.state = .speaking
                 },

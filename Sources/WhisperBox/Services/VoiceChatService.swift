@@ -9,21 +9,36 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
 
     private var audioPlayer: AVAudioPlayer?
     private var onPlaybackFinished: (() -> Void)?
+    private var _settings: AppSettings?
 
-    // Path to Qwen3-TTS (Mac Mini)
-    private let ttsScript = "\(NSHomeDirectory())/.openclaw/workspace/qwen3-tts/speak.py"
-    private let ttsVenv = "\(NSHomeDirectory())/.openclaw/workspace/qwen3-tts/.venv/bin/python3"
+    // Path to Qwen3-TTS — configurable or default
+    private var ttsScript: String {
+        if let custom = _settings?.customTTSPath, !custom.isEmpty {
+            return custom
+        }
+        return "\(NSHomeDirectory())/.openclaw/workspace/qwen3-tts/speak.py"
+    }
+
+    private var ttsVenv: String {
+        let script = URL(fileURLWithPath: ttsScript)
+        let dir = script.deletingLastPathComponent().path
+        return "\(dir)/.venv/bin/python3"
+    }
 
     private var hasTTS: Bool {
-        FileManager.default.fileExists(atPath: ttsScript)
+        guard _settings?.ttsEngine != .system else { return false }
+        return FileManager.default.fileExists(atPath: ttsScript)
     }
 
     func sendToClaudeAndSpeak(
         transcript: String,
         apiKey: String,
+        settings: AppSettings? = nil,
         onStartSpeaking: (() -> Void)? = nil,
         onFinished: (() -> Void)? = nil
     ) async {
+        // Store settings for use in callOpenClaw/TTS
+        self._settings = settings
         // Add user message to history
         conversationHistory.append(["role": "user", "content": transcript])
 
@@ -46,8 +61,16 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
 
             await MainActor.run { onStartSpeaking?() }
 
-            // Generate and play TTS (using macOS say for now)
-            await speakWithSystem(text: response)
+            // Generate and play TTS — try Qwen3 first, fallback to macOS say
+            if hasTTS {
+                do {
+                    try await speakWithQwen(text: response)
+                } catch {
+                    await speakWithSystem(text: response)
+                }
+            } else {
+                await speakWithSystem(text: response)
+            }
 
             await MainActor.run { onFinished?() }
         } catch {
@@ -67,49 +90,49 @@ final class VoiceChatService: NSObject, AVAudioPlayerDelegate {
         lastResponse = ""
     }
 
-    // MARK: - Claude Code CLI (--continue keeps persistent session, ~3s response)
+    // MARK: - OpenClaw Gateway (localhost, ~2-3s response)
 
     private func callOpenClaw(transcript: String) async throws -> String {
-        let process = Process()
-        let claudePath = FileManager.default.fileExists(atPath: "\(NSHomeDirectory())/.local/bin/claude")
-            ? "\(NSHomeDirectory())/.local/bin/claude"
-            : "/usr/local/bin/claude"
+        let baseURL = _settings?.gatewayURL ?? "http://127.0.0.1:18789"
+        let token = _settings?.gatewayToken ?? ""
 
-        process.executableURL = URL(fileURLWithPath: claudePath)
-        process.arguments = [
-            "--print",
-            "--continue",
-            "--permission-mode", "bypassPermissions",
-            "--model", "sonnet",
-            transcript
-        ]
-        // Dedicated dir for voice chat — --continue resumes same session here
-        let voiceDir = NSHomeDirectory() + "/.whisperbox-voice"
-        try? FileManager.default.createDirectory(atPath: voiceDir, withIntermediateDirectories: true)
-        process.currentDirectoryURL = URL(fileURLWithPath: voiceDir)
-
-        var env = ProcessInfo.processInfo.environment
-        env["PATH"] = "\(NSHomeDirectory())/.local/bin:/usr/local/bin:/usr/bin:/bin:" + (env["PATH"] ?? "")
-        process.environment = env
-
-        let outputPipe = Pipe()
-        let errorPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = errorPipe
-
-        try process.run()
-        process.waitUntilExit()
-
-        let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        let output = String(data: outputData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-
-        guard !output.isEmpty else {
-            let errData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let errStr = String(data: errData, encoding: .utf8) ?? "Unknown error"
-            throw VoiceChatError.apiError("CLI: \(errStr)")
+        guard let url = URL(string: "\(baseURL)/v1/chat/completions") else {
+            throw VoiceChatError.apiError("Invalid gateway URL: \(baseURL)")
         }
 
-        return output
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        request.timeoutInterval = 30
+
+        let body: [String: Any] = [
+            "model": "openclaw",
+            "messages": conversationHistory.map { msg in
+                ["role": msg["role"]!, "content": msg["content"]!] as [String: Any]
+            }
+        ]
+
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown"
+            throw VoiceChatError.apiError("Gateway: \(errorBody)")
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let text = message["content"] as? String else {
+            throw VoiceChatError.parseError
+        }
+
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Claude API (with API key)

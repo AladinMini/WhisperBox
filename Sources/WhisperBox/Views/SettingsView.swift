@@ -3,12 +3,18 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var controller: WhisperBoxController
     @State private var apiKeyVisible = false
+    @State private var gatewayTokenVisible = false
 
     var body: some View {
         TabView {
             generalTab
                 .tabItem {
                     Label("General", systemImage: "gear")
+                }
+
+            voiceChatTab
+                .tabItem {
+                    Label("Voice Chat", systemImage: "bubble.left.and.bubble.right")
                 }
 
             apiTab
@@ -21,7 +27,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 300)
+        .frame(width: 450, height: 380)
     }
 
     private var generalTab: some View {
@@ -126,6 +132,63 @@ struct SettingsView: View {
                         }
                     }
                 }
+            }
+        }
+        .formStyle(.grouped)
+        .padding()
+    }
+
+    private var voiceChatTab: some View {
+        Form {
+            Section("OpenClaw Gateway") {
+                TextField("Gateway URL", text: Binding(
+                    get: { controller.settings.gatewayURL },
+                    set: { controller.settings.gatewayURL = $0 }
+                ))
+                .textFieldStyle(.roundedBorder)
+
+                HStack {
+                    if gatewayTokenVisible {
+                        TextField("Auth Token", text: Binding(
+                            get: { controller.settings.gatewayToken },
+                            set: { controller.settings.gatewayToken = $0 }
+                        ))
+                    } else {
+                        SecureField("Auth Token", text: Binding(
+                            get: { controller.settings.gatewayToken },
+                            set: { controller.settings.gatewayToken = $0 }
+                        ))
+                    }
+                    Button(gatewayTokenVisible ? "Hide" : "Show") {
+                        gatewayTokenVisible.toggle()
+                    }
+                    .frame(width: 50)
+                }
+
+                Text("Find your token in ~/.openclaw/openclaw.json → gateway.auth.token")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Text-to-Speech") {
+                Picker("TTS Engine", selection: Binding(
+                    get: { controller.settings.ttsEngine },
+                    set: { controller.settings.ttsEngine = $0 }
+                )) {
+                    ForEach(TTSEngine.allCases, id: \.self) { engine in
+                        Text(engine.displayName).tag(engine)
+                    }
+                }
+
+                TextField("Custom TTS script path (optional)", text: Binding(
+                    get: { controller.settings.customTTSPath },
+                    set: { controller.settings.customTTSPath = $0 }
+                ))
+                .textFieldStyle(.roundedBorder)
+
+                Text("Leave empty for default (~/.openclaw/workspace/qwen3-tts/speak.py)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
