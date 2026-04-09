@@ -182,6 +182,22 @@ struct TranscriptOverlayView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            Button(action: {
+                var text = ""
+                if !viewModel.userText.isEmpty { text += "You: \(viewModel.userText)\n" }
+                if !viewModel.responseText.isEmpty { text += "\(viewModel.responseText)" }
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(text, forType: .string)
+            }) {
+                Image(systemName: "doc.on.doc")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(6)
+            }
+            .buttonStyle(.plain)
+            .help("Copy to clipboard")
+        }
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(.ultraThinMaterial)
