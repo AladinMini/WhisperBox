@@ -74,7 +74,7 @@ final class TranscriptOverlayWindow {
         w.backgroundColor = .clear
         w.level = .floating
         w.collectionBehavior = [.canJoinAllSpaces, .stationary]
-        w.ignoresMouseEvents = true
+        w.ignoresMouseEvents = false
         w.hasShadow = false
         w.contentView = hosting
 
@@ -161,7 +161,7 @@ struct TranscriptOverlayView: View {
 
             if !viewModel.responseText.isEmpty {
                 ScrollViewReader { proxy in
-                    ScrollView(.vertical, showsIndicators: false) {
+                    ScrollView(.vertical, showsIndicators: true) {
                         HStack(alignment: .top, spacing: 6) {
                             Image(systemName: "speaker.wave.2.fill")
                                 .font(.caption)
