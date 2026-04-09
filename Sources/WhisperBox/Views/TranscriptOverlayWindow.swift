@@ -91,17 +91,17 @@ final class TranscriptOverlayWindow {
 
         switch style {
         case .bubble:
-            let width: CGFloat = 400
-            let height: CGFloat = 120
+            let width: CGFloat = 450
+            let height: CGFloat = 300
             let x = screen.visibleFrame.maxX - width - 20
             let y = screen.visibleFrame.maxY - height - 10
             window?.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
 
         case .subtitle:
-            let width: CGFloat = 700
-            let height: CGFloat = 80
+            let width: CGFloat = 800
+            let height: CGFloat = 200
             let x = screen.frame.midX - width / 2
-            let y: CGFloat = 80
+            let y: CGFloat = 60
             window?.setFrame(NSRect(x: x, y: y, width: width, height: height), display: true)
 
         case .none:
@@ -144,7 +144,7 @@ struct TranscriptOverlayView: View {
                     Text(viewModel.userText)
                         .font(.system(size: 13))
                         .foregroundStyle(.white.opacity(0.8))
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -156,7 +156,7 @@ struct TranscriptOverlayView: View {
                     Text(viewModel.responseText)
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.white)
-                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -176,21 +176,22 @@ struct TranscriptOverlayView: View {
                 Text(viewModel.userText)
                     .font(.system(size: 14))
                     .foregroundStyle(.white.opacity(0.7))
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
             }
 
             if !viewModel.responseText.isEmpty {
                 Text(viewModel.responseText)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.center)
             }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
         .background(
-            Capsule()
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.black.opacity(0.75))
         )
     }
