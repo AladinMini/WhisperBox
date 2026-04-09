@@ -193,6 +193,7 @@ final class WhisperBoxController {
 
             state = .thinking
 
+            streamingVoiceChat.voiceName = settings.kokoroVoice
             await streamingVoiceChat.sendAndSpeak(
                 transcript: rawText,
                 onStartSpeaking: { [weak self] in

@@ -170,6 +170,52 @@ struct SettingsView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Section("Kokoro Voice") {
+                Picker("Voice", selection: Binding(
+                    get: { controller.settings.kokoroVoice },
+                    set: { controller.settings.kokoroVoice = $0 }
+                )) {
+                    Section("American Male") {
+                        Text("Adam").tag("am_adam")
+                        Text("Echo").tag("am_echo")
+                        Text("Eric").tag("am_eric")
+                        Text("Fenrir").tag("am_fenrir")
+                        Text("Liam").tag("am_liam")
+                        Text("Michael").tag("am_michael")
+                        Text("Onyx").tag("am_onyx")
+                        Text("Puck").tag("am_puck")
+                    }
+                    Section("American Female") {
+                        Text("Alloy").tag("af_alloy")
+                        Text("Aoede").tag("af_aoede")
+                        Text("Bella").tag("af_bella")
+                        Text("Heart").tag("af_heart")
+                        Text("Jessica").tag("af_jessica")
+                        Text("Kore").tag("af_kore")
+                        Text("Nicole").tag("af_nicole")
+                        Text("Nova").tag("af_nova")
+                        Text("River").tag("af_river")
+                        Text("Sarah").tag("af_sarah")
+                        Text("Sky").tag("af_sky")
+                    }
+                    Section("British Male") {
+                        Text("Daniel").tag("bm_daniel")
+                        Text("Fable").tag("bm_fable")
+                        Text("George").tag("bm_george")
+                        Text("Lewis").tag("bm_lewis")
+                    }
+                    Section("British Female") {
+                        Text("Alice").tag("bf_alice")
+                        Text("Emma").tag("bf_emma")
+                        Text("Lily").tag("bf_lily")
+                    }
+                }
+
+                Text("Preview voices at http://localhost:8880/web/")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Text-to-Speech") {
                 Picker("TTS Engine", selection: Binding(
                     get: { controller.settings.ttsEngine },

@@ -98,6 +98,13 @@ final class AppSettings {
         set { defaults.set(newValue, forKey: "customTTSPath") }
     }
 
+    // MARK: - Kokoro Voice
+
+    var kokoroVoice: String {
+        get { defaults.string(forKey: "kokoroVoice") ?? "am_echo" }
+        set { defaults.set(newValue, forKey: "kokoroVoice") }
+    }
+
     static var modelDirectoryURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return appSupport.appendingPathComponent("WhisperBox", isDirectory: true)

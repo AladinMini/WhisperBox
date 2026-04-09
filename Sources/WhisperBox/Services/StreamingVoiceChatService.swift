@@ -8,6 +8,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
     var conversationHistory: [[String: String]] = []
     var lastResponse: String = ""
     var currentPartial: String = ""
+    var voiceName: String = "am_echo"
 
     private var audioPlayer: AVAudioPlayer?
     private var speechQueue: [String] = []
@@ -192,7 +193,7 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         let body: [String: Any] = [
             "model": "kokoro",
             "input": text,
-            "voice": "am_echo",
+            "voice": voiceName,
             "response_format": "mp3",
             "speed": 1.0
         ]
