@@ -311,18 +311,24 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         self.playerNode = playerNode
         self.isPlaying = true
 
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            playerNode.scheduleFile(audioFile, at: nil) {
-                DispatchQueue.main.async {
-                    self.isPlaying = false
-                    engine.stop()
-                    self.audioEngine = nil
-                    self.playerNode = nil
-                    continuation.resume()
-                }
-            }
-            playerNode.play()
-        }
+        // Schedule the file
+        await playerNode.scheduleFile(audioFile, at: nil)
+        playerNode.play()
+        
+        // Wait for playback to actually finish (not just scheduled)
+        let frameCount = audioFile.length
+        let sampleRate = audioFile.processingFormat.sampleRate
+        let duration = Double(frameCount) / sampleRate
+        
+        // Add small buffer to ensure complete playback
+        try? await Task.sleep(for: .seconds(duration + 0.1))
+        
+        // Cleanup
+        playerNode.stop()
+        engine.stop()
+        self.audioEngine = nil
+        self.playerNode = nil
+        self.isPlaying = false
 
         try? FileManager.default.removeItem(atPath: path)
     }
