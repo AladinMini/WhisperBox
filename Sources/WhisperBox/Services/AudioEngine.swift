@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreAudio
 import Foundation
 
 @Observable
@@ -14,23 +15,45 @@ final class AudioEngine {
 
     func startBufferedCapture(deviceManager: AudioDeviceManager? = nil) throws {
         guard !isRunning else { return }
+        
+        // Clean up any previous engine state
+        if let oldEngine = engine {
+            oldEngine.inputNode.removeTap(onBus: 0)
+            oldEngine.stop()
+            self.engine = nil
+        }
 
         bufferLock.lock()
         audioBuffer.removeAll()
         bufferLock.unlock()
 
         let engine = AVAudioEngine()
+        
+        // Apply selected input device BEFORE accessing inputNode
+        if let dm = deviceManager, let deviceID = dm.selectedDeviceID {
+            let inputUnit = engine.inputNode.audioUnit!
+            var devID = deviceID
+            let status = AudioUnitSetProperty(
+                inputUnit,
+                kAudioOutputUnitProperty_CurrentDevice,
+                kAudioUnitScope_Global,
+                0,
+                &devID,
+                UInt32(MemoryLayout<AudioDeviceID>.size)
+            )
+            if status != noErr {
+                print("[Audio] Failed to set input device: \(status)")
+            }
+        }
+        
         self.engine = engine
-
-        // Apply selected input device
-        deviceManager?.applySelectedDevice(to: engine)
 
         let inputNode = engine.inputNode
         
-        // Force the engine to update its graph with the new device
-        engine.prepare()
+        // Get format AFTER setting device
+        let inputFormat = inputNode.inputFormat(forBus: 0)
         
-        let inputFormat = inputNode.outputFormat(forBus: 0)
+        print("[Audio] Input format: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)ch")
         
         // Validate format before installing tap
         guard inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 else {
@@ -51,8 +74,8 @@ final class AudioEngine {
             throw AudioError.converterError
         }
 
-        // Use nil format to let AVAudioEngine pick the right format for the device
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
+        // Use the actual input format for the tap
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
             guard let self else { return }
 
             // Calculate RMS for level meter
@@ -108,18 +131,40 @@ final class AudioEngine {
         audioBuffer.removeAll()
         bufferLock.unlock()
 
+        // Clean up any previous engine state
+        if let oldEngine = engine {
+            oldEngine.inputNode.removeTap(onBus: 0)
+            oldEngine.stop()
+            self.engine = nil
+        }
+        
         let engine = AVAudioEngine()
-        self.engine = engine
 
-        // Apply selected input device
-        deviceManager?.applySelectedDevice(to: engine)
+        // Apply selected input device BEFORE accessing inputNode
+        if let dm = deviceManager, let deviceID = dm.selectedDeviceID {
+            let inputUnit = engine.inputNode.audioUnit!
+            var devID = deviceID
+            let status = AudioUnitSetProperty(
+                inputUnit,
+                kAudioOutputUnitProperty_CurrentDevice,
+                kAudioUnitScope_Global,
+                0,
+                &devID,
+                UInt32(MemoryLayout<AudioDeviceID>.size)
+            )
+            if status != noErr {
+                print("[Audio] Failed to set input device: \(status)")
+            }
+        }
+        
+        self.engine = engine
 
         let inputNode = engine.inputNode
         
-        // Force the engine to update its graph with the new device
-        engine.prepare()
+        // Get format AFTER setting device
+        let inputFormat = inputNode.inputFormat(forBus: 0)
         
-        let inputFormat = inputNode.outputFormat(forBus: 0)
+        print("[Audio] Live input format: \(inputFormat.sampleRate)Hz, \(inputFormat.channelCount)ch")
         
         // Validate format
         guard inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 else {
@@ -137,8 +182,8 @@ final class AudioEngine {
         let rawLock = NSLock()
         var isProcessing = false
 
-        // Use nil format to let AVAudioEngine pick the right format for the device
-        inputNode.installTap(onBus: 0, bufferSize: 2048, format: nil) { [weak self] buffer, _ in
+        // Use the actual input format for the tap
+        inputNode.installTap(onBus: 0, bufferSize: 2048, format: inputFormat) { [weak self] buffer, _ in
             guard let self, !isProcessing else { return }
 
             let level = Self.calculateRMS(buffer: buffer)
