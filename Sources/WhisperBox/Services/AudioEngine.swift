@@ -26,7 +26,16 @@ final class AudioEngine {
         deviceManager?.applySelectedDevice(to: engine)
 
         let inputNode = engine.inputNode
+        
+        // Force the engine to update its graph with the new device
+        engine.prepare()
+        
         let inputFormat = inputNode.outputFormat(forBus: 0)
+        
+        // Validate format before installing tap
+        guard inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 else {
+            throw AudioError.formatError
+        }
 
         // Target format: 16kHz mono Float32 (what whisper.cpp expects)
         guard let targetFormat = AVAudioFormat(
@@ -42,7 +51,8 @@ final class AudioEngine {
             throw AudioError.converterError
         }
 
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
+        // Use nil format to let AVAudioEngine pick the right format for the device
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
             guard let self else { return }
 
             // Calculate RMS for level meter
@@ -105,7 +115,16 @@ final class AudioEngine {
         deviceManager?.applySelectedDevice(to: engine)
 
         let inputNode = engine.inputNode
+        
+        // Force the engine to update its graph with the new device
+        engine.prepare()
+        
         let inputFormat = inputNode.outputFormat(forBus: 0)
+        
+        // Validate format
+        guard inputFormat.sampleRate > 0 && inputFormat.channelCount > 0 else {
+            throw AudioError.formatError
+        }
 
         // Use native format for capturing — convert when delivering
         let nativeSampleRate = inputFormat.sampleRate
@@ -118,7 +137,8 @@ final class AudioEngine {
         let rawLock = NSLock()
         var isProcessing = false
 
-        inputNode.installTap(onBus: 0, bufferSize: 2048, format: inputFormat) { [weak self] buffer, _ in
+        // Use nil format to let AVAudioEngine pick the right format for the device
+        inputNode.installTap(onBus: 0, bufferSize: 2048, format: nil) { [weak self] buffer, _ in
             guard let self, !isProcessing else { return }
 
             let level = Self.calculateRMS(buffer: buffer)
