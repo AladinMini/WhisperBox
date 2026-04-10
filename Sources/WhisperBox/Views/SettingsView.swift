@@ -27,7 +27,7 @@ struct SettingsView: View {
                     Label("About", systemImage: "info.circle")
                 }
         }
-        .frame(width: 450, height: 380)
+        .frame(width: 450, height: 520)
     }
 
     private var generalTab: some View {
@@ -140,6 +140,44 @@ struct SettingsView: View {
 
     private var voiceChatTab: some View {
         Form {
+            Section("Audio Devices") {
+                Picker("Input (Microphone)", selection: Binding(
+                    get: {
+                        controller.deviceManager.selectedDeviceID ?? 0
+                    },
+                    set: { newID in
+                        controller.deviceManager.selectedDeviceID = newID
+                        if let device = controller.deviceManager.availableDevices.first(where: { $0.id == newID }) {
+                            controller.settings.selectedInputDeviceUID = device.uid
+                        }
+                    }
+                )) {
+                    ForEach(controller.deviceManager.availableDevices) { device in
+                        Text(device.name).tag(device.id)
+                    }
+                }
+
+                Picker("Output (Speaker)", selection: Binding(
+                    get: {
+                        controller.deviceManager.selectedOutputDeviceID ?? 0
+                    },
+                    set: { newID in
+                        controller.deviceManager.selectedOutputDeviceID = newID
+                        if let device = controller.deviceManager.availableOutputDevices.first(where: { $0.id == newID }) {
+                            controller.settings.selectedOutputDeviceUID = device.uid
+                        }
+                    }
+                )) {
+                    ForEach(controller.deviceManager.availableOutputDevices) { device in
+                        Text(device.name).tag(device.id)
+                    }
+                }
+
+                Button("Refresh Devices") {
+                    controller.deviceManager.refreshDevices()
+                }
+            }
+
             Section("OpenClaw Gateway") {
                 TextField("Gateway URL", text: Binding(
                     get: { controller.settings.gatewayURL },

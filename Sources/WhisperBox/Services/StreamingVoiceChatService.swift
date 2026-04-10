@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreAudio
 import Foundation
 
 @Observable
@@ -9,8 +10,11 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
     var lastResponse: String = ""
     var currentPartial: String = ""
     var voiceName: String = "am_echo"
+    var outputDeviceID: AudioDeviceID?
 
     private var audioPlayer: AVAudioPlayer?
+    private var audioEngine: AVAudioEngine?
+    private var playerNode: AVAudioPlayerNode?
     private var speechQueue: [String] = []
     private var isSpeakingQueue = false
     private var playbackContinuation: CheckedContinuation<Void, Never>?
@@ -65,6 +69,10 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
     func stopPlayback() {
         audioPlayer?.stop()
         audioPlayer = nil
+        playerNode?.stop()
+        audioEngine?.stop()
+        audioEngine = nil
+        playerNode = nil
         speechQueue.removeAll()
         isSpeakingQueue = false
         isSpeaking = false
@@ -235,6 +243,18 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
 
     @MainActor
     private func playAudioFile(_ path: String) async {
+        // If no specific output device, use simple AVAudioPlayer
+        guard let deviceID = outputDeviceID else {
+            await playWithAVAudioPlayer(path)
+            return
+        }
+
+        // Use AVAudioEngine for device routing
+        await playWithAudioEngine(path, deviceID: deviceID)
+    }
+
+    @MainActor
+    private func playWithAVAudioPlayer(_ path: String) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             do {
                 let player = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
@@ -250,6 +270,60 @@ final class StreamingVoiceChatService: NSObject, AVAudioPlayerDelegate {
         }
 
         isPlaying = false
+        try? FileManager.default.removeItem(atPath: path)
+    }
+
+    @MainActor
+    private func playWithAudioEngine(_ path: String, deviceID: AudioDeviceID) async {
+        let engine = AVAudioEngine()
+        let playerNode = AVAudioPlayerNode()
+
+        engine.attach(playerNode)
+
+        // Route to specific output device
+        let outputUnit = engine.outputNode.audioUnit!
+        var devID = deviceID
+        AudioUnitSetProperty(
+            outputUnit,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &devID,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+
+        guard let audioFile = try? AVAudioFile(forReading: URL(fileURLWithPath: path)) else {
+            try? FileManager.default.removeItem(atPath: path)
+            return
+        }
+
+        let format = audioFile.processingFormat
+        engine.connect(playerNode, to: engine.mainMixerNode, format: format)
+
+        do {
+            try engine.start()
+        } catch {
+            try? FileManager.default.removeItem(atPath: path)
+            return
+        }
+
+        self.audioEngine = engine
+        self.playerNode = playerNode
+        self.isPlaying = true
+
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            playerNode.scheduleFile(audioFile, at: nil) {
+                DispatchQueue.main.async {
+                    self.isPlaying = false
+                    engine.stop()
+                    self.audioEngine = nil
+                    self.playerNode = nil
+                    continuation.resume()
+                }
+            }
+            playerNode.play()
+        }
+
         try? FileManager.default.removeItem(atPath: path)
     }
 

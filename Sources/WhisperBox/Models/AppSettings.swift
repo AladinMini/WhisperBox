@@ -110,6 +110,18 @@ final class AppSettings {
         set { defaults.set(newValue.rawValue, forKey: "overlayStyle") }
     }
 
+    // MARK: - Audio Devices
+
+    var selectedInputDeviceUID: String? {
+        get { defaults.string(forKey: "selectedInputDeviceUID") }
+        set { defaults.set(newValue, forKey: "selectedInputDeviceUID") }
+    }
+
+    var selectedOutputDeviceUID: String? {
+        get { defaults.string(forKey: "selectedOutputDeviceUID") }
+        set { defaults.set(newValue, forKey: "selectedOutputDeviceUID") }
+    }
+
     static var modelDirectoryURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return appSupport.appendingPathComponent("WhisperBox", isDirectory: true)

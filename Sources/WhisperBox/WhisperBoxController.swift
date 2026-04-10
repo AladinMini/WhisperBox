@@ -202,6 +202,7 @@ final class WhisperBoxController {
             transcriptOverlay.show(userText: rawText)
 
             streamingVoiceChat.voiceName = settings.kokoroVoice
+            streamingVoiceChat.outputDeviceID = deviceManager.selectedOutputDeviceID
             await streamingVoiceChat.sendAndSpeak(
                 transcript: rawText,
                 onPartialResponse: { [weak self] partial in
